@@ -17,15 +17,27 @@ if not COHERE_API_KEY:
     raise ValueError("Cohere API Key not found. Please check your .env file.")
 
 # Initialize FastAPI
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+# Allowed frontend domains
+origins = [
+    "http://localhost:5173",  # Local frontend
+    "https://azwanfrontend-8rf2pb5da-yousuf-sinhas-projects.vercel.app",  # Deployed frontend
+    "https://azwan-frontend.vercel.app/",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=origins,  # Allow only these origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
 )
+
+
 
 # Initialize Cohere Client
 co = cohere.Client(COHERE_API_KEY)
@@ -45,10 +57,10 @@ async def chat(request: ChatRequest):
     try:
         # 🎯 Personalized prompt including "Ajwan"
         personalized_prompt = f"""
-        Your name is **Azwan**, and you are an AI assistant designed by Yousuf Sinha.
+        Your name is **Azwan**, and you are an AI assistant developed by Yousuf Sinha.
         You should provide clear, precise and insightful responses. 
-        If Yousuf asks about AI, chatbot development, business, or software engineering, give expert advice. 
-        Keep your tone friendly yet professional.
+        If anyone asks about anything, give precised answer. 
+        Keep your tone friendly yet professional. Do not make answers long.
 
         User: {request.message}
         Azwan:
