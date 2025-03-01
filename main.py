@@ -4,8 +4,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import traceback
+from fastapi.middleware.cors import CORSMiddleware  # Keep only this import
 
-from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -26,7 +26,7 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",  # Local frontend
     "https://azwanfrontend-8rf2pb5da-yousuf-sinhas-projects.vercel.app",  # Deployed frontend
-    "https://azwan-frontend.vercel.app/",
+    "https://azwan-frontend.vercel.app",
 ]
 
 app.add_middleware(
@@ -74,12 +74,15 @@ async def chat(request: ChatRequest):
         )
 
         # Extract response text
-        if response and response.generations:
+        if response and hasattr(response, "generations") and response.generations:
             bot_reply = response.generations[0].text.strip()
             return {"response": bot_reply}
+        else:
+            return {"response": "I'm sorry, but I couldn't generate a response."}
 
-        raise HTTPException(status_code=500, detail="Invalid response from Cohere")
-
+  
+    except cohere.error.CohereAPIError as e:
+        raise HTTPException(status_code=500, detail=f"Cohere API Error: {str(e)}")
     except Exception as e:
-        print(traceback.format_exc())  # Logs the full error
-        raise HTTPException(status_code=500, detail=str(e))
+        print(traceback.format_exc())  # Logs error in backend
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
